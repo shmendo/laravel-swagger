@@ -128,13 +128,22 @@ class Generator
 
     protected function generatePath()
     {
-        $actionInstance = $this->getActionClassInstance();
+        [$actionInstance, $className] = $this->getActionClassInstance();
         $docBlock = $actionInstance ? ($actionInstance->getDocComment() ?: '') : '';
 
         [$isDeprecated, $summary, $description] = $this->parseActionDocBlock($docBlock);
 
+        $tags = [
+            str_replace(
+                'Controller',
+                '',
+                str_replace('App\\Http\\Controllers\\', '', $className)
+            ),
+        ];
+
         $this->docs['paths'][$this->route->uri()][$this->method] = [
             'summary' => $summary,
+            'tags' => $tags,
             'description' => $description,
             'deprecated' => $isDeprecated,
             'responses' => [
@@ -181,7 +190,7 @@ class Generator
 
     protected function getFormRules(): array
     {
-        $action_instance = $this->getActionClassInstance();
+        [$action_instance, $className] = $this->getActionClassInstance();
 
         if (!$action_instance) {
             return [];
@@ -190,7 +199,7 @@ class Generator
         $parameters = $action_instance->getParameters();
 
         foreach ($parameters as $parameter) {
-            $class = $parameter->getClass();
+            $class = $parameter->getType();
 
             if (!$class) {
                 continue;
@@ -218,7 +227,7 @@ class Generator
         }
     }
 
-    private function getActionClassInstance(): ?ReflectionMethod
+    private function getActionClassInstance()
     {
         [$class, $method] = Str::parseCallback($this->route->action());
 
@@ -226,7 +235,7 @@ class Generator
             return null;
         }
 
-        return new ReflectionMethod($class, $method);
+        return [new ReflectionMethod($class, $method), $class];
     }
 
     private function parseActionDocBlock(string $docBlock)
