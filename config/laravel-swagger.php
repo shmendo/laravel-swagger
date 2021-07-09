@@ -28,11 +28,11 @@ return [
     ],
 
     'consumes' => [
-        // 'application/json',
+        'application/json',
     ],
 
     'produces' => [
-        // 'application/json',
+        'application/json',
     ],
 
     /*
